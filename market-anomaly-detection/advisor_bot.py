@@ -1,20 +1,23 @@
 # advisor_bot.py
 
+import openai
+
+openai.api_key = "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"
+
+
 def get_advice(user_input):
     """
-    Given a user's query, this function will return an appropriate response.
-    It uses a simple keyword-based approach, but you can improve it with NLP models if needed.
+    This function generates a bot response based on user input using OpenAI's GPT model (updated API).
     """
-    user_input = user_input.lower()
+    # Send a prompt to OpenAI's GPT model
+    response = openai.chat_completions.create(
+        model="gpt-3.5-turbo",  # You can replace with the desired GPT model version
+        messages=[
+            {"role": "user", "content": user_input}
+        ]
+    )
     
-    if "anomaly" in user_input:
-        return "Anomalies are outliers in the market data, which we detected using our model. Red markers in the chart represent anomalies."
-    elif "investment strategy" in user_input:
-        return "Investment strategies can vary depending on detected anomalies. Hedging and position adjustments are typical approaches."
-    elif "model" in user_input:
-        return "We are using the Isolation Forest model for anomaly detection, which is effective in identifying outliers in high-dimensional data."
-    elif "data" in user_input:
-        return "You can upload market data in CSV or Excel format to detect anomalies and explore investment strategies."
-    else:
-        return "I'm here to help with anomalies and market strategies. Feel free to ask about any related topics!"
-
+    # Get the response text
+    bot_response = response['choices'][0]['message']['content'].strip()
+    
+    return bot_response
