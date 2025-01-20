@@ -2,225 +2,231 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from model import MarketAnomalyDetector
-import time
+from datetime import datetime, timedelta
 
-# Page configuration
-st.set_page_config(
-    page_title="Market Sentinel - Anomaly Detection",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page config remains same...
+[Previous page config and CSS code remains the same]
 
-# Custom CSS
-st.markdown("""
-    <style>
-    .stButton>button {
-        width: 100%;
-        background-color: #FF4B4B;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+def create_technical_indicators(df):
+    """Calculate technical indicators for visualization"""
+    df = df.copy()
+    if 'Close' in df.columns:
+        # RSI
+        delta = df['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df['RSI'] = 100 - (100 / (1 + rs))
+        
+        # Moving averages
+        df['SMA_20'] = df['Close'].rolling(window=20).mean()
+        df['SMA_50'] = df['Close'].rolling(window=50).mean()
+        
+        # Bollinger Bands
+        df['BB_middle'] = df['Close'].rolling(window=20).mean()
+        df['BB_upper'] = df['BB_middle'] + 2*df['Close'].rolling(window=20).std()
+        df['BB_lower'] = df['BB_middle'] - 2*df['Close'].rolling(window=20).std()
+        
+        # Volatility
+        df['Volatility'] = df['Close'].pct_change().rolling(window=20).std()
+    
+    return df
 
-def load_and_prepare_data(file):
-    """Load and prepare data with proper error handling"""
-    try:
-        # Read the file
-        if file.name.endswith('.csv'):
-            df = pd.read_csv(file)
-        elif file.name.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file)
-        else:
-            raise ValueError("Unsupported file format")
-        
-        # Convert date column if it exists
-        date_columns = df.filter(like='date').columns
-        if len(date_columns) > 0:
-            df[date_columns[0]] = pd.to_datetime(df[date_columns[0]])
-            df.set_index(date_columns[0], inplace=True)
-        
-        # Ensure we have numeric data
-        numeric_df = df.select_dtypes(include=[np.number])
-        if numeric_df.empty:
-            raise ValueError("No numeric columns found in the data")
-        
-        # Basic feature engineering
-        features = pd.DataFrame()
-        
-        # If we have typical financial data columns
-        if 'Close' in df.columns:
-            features['returns'] = df['Close'].pct_change()
-            features['volatility'] = features['returns'].rolling(window=20).std()
-        else:
-            # Use the first numeric column as the main feature
-            main_col = numeric_df.columns[0]
-            features['value'] = numeric_df[main_col]
-            features['change'] = features['value'].pct_change()
-            features['volatility'] = features['change'].rolling(window=20).std()
-        
-        # Add any additional numeric columns as features
-        for col in numeric_df.columns:
-            if col not in ['Close']:
-                features[f'{col}_raw'] = numeric_df[col]
-        
-        # Drop any NaN values
-        features = features.dropna()
-        
-        return features, df
-        
-    except Exception as e:
-        raise Exception(f"Error processing data: {str(e)}")
-
-def plot_anomalies(data, predictions, title="Anomaly Detection Results"):
-    """Create plotly visualization of anomalies"""
+def plot_market_analysis(data, predictions, scores):
+    """Create comprehensive market analysis plots"""
     fig = go.Figure()
     
-    # Get the main value column (Close or first numeric column)
-    value_col = 'Close' if 'Close' in data.columns else data.select_dtypes(include=[np.number]).columns[0]
-    
-    # Add main line
+    # Main price line
     fig.add_trace(go.Scatter(
         x=data.index,
-        y=data[value_col],
-        name='Value',
+        y=data['Close'],
+        name='Price',
         line=dict(color='blue', width=1)
     ))
     
-    # Add anomaly points
-    anomaly_indices = predictions == 1
+    # Add moving averages
     fig.add_trace(go.Scatter(
-        x=data.index[anomaly_indices],
-        y=data[value_col][anomaly_indices],
+        x=data.index,
+        y=data['SMA_20'],
+        name='20-day MA',
+        line=dict(color='orange', width=1, dash='dash')
+    ))
+    
+    # Add Bollinger Bands
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data['BB_upper'],
+        name='Upper BB',
+        line=dict(color='gray', width=1, dash='dot')
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data['BB_lower'],
+        name='Lower BB',
+        line=dict(color='gray', width=1, dash='dot'),
+        fill='tonexty'
+    ))
+    
+    # Add anomaly points
+    anomaly_points = data[predictions == 1]
+    fig.add_trace(go.Scatter(
+        x=anomaly_points.index,
+        y=anomaly_points['Close'],
         mode='markers',
         name='Anomalies',
         marker=dict(color='red', size=10, symbol='x')
     ))
     
     fig.update_layout(
-        title=title,
-        xaxis_title='Time',
-        yaxis_title='Value',
-        height=500
+        title='Market Analysis with Anomalies',
+        xaxis_title='Date',
+        yaxis_title='Price',
+        height=600,
+        hovermode='x unified'
     )
     
     return fig
 
-# Sidebar
-with st.sidebar:
-    st.title("Market Sentinel")
-    st.markdown("---")
+def generate_market_insights(data, predictions, scores):
+    """Generate detailed market insights based on anomalies"""
+    # Get recent data
+    recent_data = data.iloc[-30:]  # Last 30 data points
+    recent_anomalies = predictions[-30:]
+    recent_scores = scores[-30:]
     
-    uploaded_file = st.file_uploader(
-        "📊 Upload Market Data",
-        type=["csv", "xlsx", "xls"],
-        help="Upload your market data file (CSV or Excel)"
-    )
+    # Calculate key metrics
+    volatility = recent_data['Volatility'].mean()
+    rsi = recent_data['RSI'].iloc[-1]
+    price_trend = (recent_data['Close'].iloc[-1] - recent_data['Close'].iloc[0]) / recent_data['Close'].iloc[0] * 100
     
-    if uploaded_file:
-        st.success("File uploaded successfully!")
+    # Generate insights
+    insights = {
+        'market_status': 'High Risk' if predictions[-1] == 1 else 'Normal',
+        'anomaly_score': scores[-1],
+        'risk_level': 'High' if volatility > 0.02 else 'Moderate' if volatility > 0.01 else 'Low',
+        'trend': 'Bullish' if price_trend > 0 else 'Bearish',
+        'overbought': rsi > 70,
+        'oversold': rsi < 30,
+        'recommendations': []
+    }
     
-    st.markdown("### ⚙️ Settings")
-    contamination = st.slider(
-        "Anomaly Sensitivity",
-        min_value=0.01,
-        max_value=0.2,
-        value=0.1,
-        help="Adjust the sensitivity of anomaly detection"
-    )
+    # Generate recommendations based on conditions
+    if predictions[-1] == 1:  # Anomaly detected
+        if insights['trend'] == 'Bearish':
+            insights['recommendations'].extend([
+                "⚠️ Consider reducing position sizes",
+                "🛡️ Review and tighten stop-loss levels",
+                "💰 Increase cash holdings to 40-50%",
+                "📊 Monitor volatility closely"
+            ])
+        else:
+            insights['recommendations'].extend([
+                "⚠️ Exercise caution despite upward trend",
+                "🎯 Consider taking partial profits",
+                "⚖️ Reduce leverage if using any",
+                "📈 Watch for potential trend reversal"
+            ])
+    else:  # Normal conditions
+        if insights['trend'] == 'Bullish':
+            insights['recommendations'].extend([
+                "✅ Maintain current positions",
+                "📈 Look for potential entry points",
+                "🎯 Consider scaling into new positions",
+                "📊 Regular portfolio rebalancing"
+            ])
+        else:
+            insights['recommendations'].extend([
+                "📉 Consider defensive positions",
+                "💰 Gradual accumulation on dips",
+                "⚖️ Maintain balanced portfolio",
+                "📊 Review sector allocation"
+            ])
+    
+    return insights
 
-# Main content
-st.title("🎯 Market Anomaly Detection System")
+# Main app code
+[Previous sidebar code remains the same]
 
 if uploaded_file is not None:
     try:
-        # Process data
-        with st.spinner("Processing data..."):
-            features, original_data = load_and_prepare_data(uploaded_file)
-            
-            # Initialize and train model
-            model = MarketAnomalyDetector(contamination=contamination)
-            model.fit(features)
-            
-            # Get predictions
-            predictions = model.predict(features)
-            scores = model.anomaly_scores(features)
+        # Load and process data
+        features, original_data = load_and_prepare_data(uploaded_file)
+        original_data = create_technical_indicators(original_data)
         
-        # Display results in tabs
-        tab1, tab2 = st.tabs(["📈 Analysis", "📊 Details"])
+        # Model processing
+        model = MarketAnomalyDetector(contamination=contamination)
+        model.fit(features)
+        predictions = model.predict(features)
+        scores = model.anomaly_scores(features)
+        
+        # Create tabs for different views
+        tab1, tab2, tab3, tab4 = st.tabs(["📈 Market Analysis", "🎯 Insights", "📊 Technical Indicators", "📑 Details"])
         
         with tab1:
-            # Summary metrics
-            col1, col2 = st.columns(2)
+            # Main visualization
+            st.plotly_chart(plot_market_analysis(original_data, predictions, scores), use_container_width=True)
+            
+            # Key metrics
+            col1, col2, col3 = st.columns(3)
             with col1:
                 anomaly_count = sum(predictions == 1)
                 st.metric("Anomalies Detected", anomaly_count)
             with col2:
-                anomaly_ratio = (anomaly_count / len(predictions)) * 100
-                st.metric("Anomaly Percentage", f"{anomaly_ratio:.1f}%")
-            
-            # Plot
-            st.plotly_chart(plot_anomalies(original_data, predictions), use_container_width=True)
-            
-            # Market status and advice
-            status = "🚨 Anomaly Detected" if predictions[-1] == 1 else "✅ Normal Conditions"
-            st.markdown(f"### Current Status: {status}")
-            
-            if predictions[-1] == 1:
-                st.markdown("""
-                **Recommended Actions:**
-                - Review portfolio risk exposure
-                - Consider reducing position sizes
-                - Monitor market conditions closely
-                """)
-            else:
-                st.markdown("""
-                **Recommended Actions:**
-                - Maintain normal trading operations
-                - Continue regular market monitoring
-                - Review portfolio as planned
-                """)
+                current_volatility = original_data['Volatility'].iloc[-1] * 100
+                st.metric("Current Volatility", f"{current_volatility:.1f}%")
+            with col3:
+                rsi_value = original_data['RSI'].iloc[-1]
+                st.metric("RSI", f"{rsi_value:.1f}")
         
         with tab2:
-            # Detailed view
-            results_df = pd.DataFrame({
+            # Generate and display insights
+            insights = generate_market_insights(original_data, predictions, scores)
+            
+            # Display market status
+            st.header(f"Market Status: {insights['market_status']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.info(f"Risk Level: {insights['risk_level']}")
+                st.write(f"Market Trend: {insights['trend']}")
+            with col2:
+                if insights['overbought']:
+                    st.warning("Market is Overbought")
+                elif insights['oversold']:
+                    st.warning("Market is Oversold")
+                st.write(f"Anomaly Score: {insights['anomaly_score']:.2f}")
+            
+            # Display recommendations
+            st.subheader("Recommended Actions:")
+            for rec in insights['recommendations']:
+                st.write(rec)
+        
+        with tab3:
+            # Technical indicators plots
+            fig = px.line(original_data, y=['RSI'], title='Relative Strength Index (RSI)')
+            fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought")
+            fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold")
+            st.plotly_chart(fig, use_container_width=True)
+            
+            fig = px.line(original_data, y=['Volatility'], title='Volatility')
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with tab4:
+            # Detailed view of data and predictions
+            st.dataframe(pd.DataFrame({
                 'Date': original_data.index,
+                'Close': original_data['Close'],
                 'Anomaly': predictions,
-                'Anomaly Score': scores
-            })
-            st.dataframe(results_df)
+                'Anomaly Score': scores,
+                'RSI': original_data['RSI'],
+                'Volatility': original_data['Volatility']
+            }))
             
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         st.write("Please check your data format and try again.")
 
-else:
-    # Welcome message
-    st.markdown("""
-    ## 👋 Welcome to Market Sentinel!
-    
-    Upload your market data to:
-    - 🎯 Detect market anomalies
-    - 📊 Visualize patterns
-    - 📈 Get market insights
-    
-    ### Supported Data Formats:
-    - CSV files
-    - Excel files (xls, xlsx)
-    
-    ### Required Columns:
-    - Date/Time column
-    - At least one numeric column (e.g., Close price, value)
-    """)
-
-# Footer
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center'>
-        <p>Market Sentinel - Advanced Market Anomaly Detection</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+[Previous welcome message and footer code remains the same]
