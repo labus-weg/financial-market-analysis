@@ -197,38 +197,43 @@ st.title("🚀 Market Anomaly Detection")
 if uploaded_file is not None:
     try:
         with st.spinner("Processing data..."):
-            # Load dataset
+            # Load the dataset
             data = load_data(uploaded_file)
             
-            # Display dataset summary
-            st.write("Dataset Summary:")
-            st.write(data.describe())
+            # Train the anomaly detection model
+            model, scaler = train_anomaly_detector(data, contamination)
             
-            # Models to compare
-            models = ['IsolationForest', 'OneClassSVM', 'LOF']
+            # Predict anomalies in the data
+            anomalies = predict_anomalies(model, scaler, data)
+            anomaly_scores = model.decision_function(scaler.transform(data.select_dtypes(include=[np.number])))
             
-            for model_name in models:
-                # Train anomaly detection model
-                model, scaler = train_anomaly_detector(data, contamination, model_type=model_name)
-                
-                # Predict anomalies
-                anomalies = predict_anomalies(model, scaler, data)
-                
-                # Show anomaly timeline plot
-                st.plotly_chart(plot_anomaly_timeline(data, anomalies, model_name), use_container_width=True)
-                
-                # Show anomaly score plot
-                st.plotly_chart(plot_decision_function(data, model, scaler, model_name), use_container_width=True)
-                
-                # Show anomaly count
-                st.write(f"**{model_name}** detected {anomalies.sum()} anomalies.")
-                
+            # Get investment strategy suggestions based on the detected anomalies
+            investment_strategies = suggest_investment_strategy(anomalies, anomaly_scores, data)
+            
+            # Display the strategies in the Streamlit app
+            st.write("### Investment Strategy Suggestions")
+            for strategy in investment_strategies:
+                st.write(strategy)
+            
+            # Display the anomaly timeline plot
+            st.plotly_chart(plot_anomaly_timeline(data, anomalies), use_container_width=True)
+            
+            # Display the decision function plot
+            st.plotly_chart(plot_decision_function(data, model, scaler), use_container_width=True)
+            
+            # Show anomalies count
+            st.write(f"Number of anomalies detected: {anomalies.sum()}")
+            
     except Exception as e:
         st.error(f"An error occurred: {e}")
 else:
     st.markdown("""
-    ## 👋 Welcome!
-    Upload your market data to detect anomalies, visualize patterns, and gain insights into market behavior.
+    ## 👋 Welcome to Market Anomaly Detection!
+    Upload your market data to:
+    - 🎯 Detect market anomalies
+    - 📊 Visualize market patterns
+    - 🤖 Get AI-powered investment advice
+    - 📈 Monitor market health
     """)
 
 # Footer
@@ -246,6 +251,25 @@ if uploaded_file is not None:
     data = load_data(uploaded_file)
     anomaly_detector = MarketAnomalyDetector(contamination=contamination, model_type=model_name)
     
+def load_data(uploaded_file):
+    """Load market data from a file"""
+    # Get the file name
+    file_name = uploaded_file.name
+
+    # Check file type based on the extension
+    if file_name.endswith('.csv'):
+        data = pd.read_csv(uploaded_file)
+    elif file_name.endswith(('.xls', '.xlsx')):
+        data = pd.read_excel(uploaded_file)
+    else:
+        raise ValueError("Unsupported file format")
+
+    # Automatically fill missing values with the column mean
+    data = data.fillna(data.mean())
+
+    return data
+
+
     # Fit the model
     anomaly_detector.fit(data)
 
@@ -273,3 +297,4 @@ if user_input:
         st.error(f"An error occurred while fetching advice: {e}")
 else:
     st.write("Ask me anything related to market analysis and anomaly detection!")
+
