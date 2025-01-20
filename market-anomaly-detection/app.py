@@ -5,6 +5,9 @@ import plotly.graph_objects as go
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
+# Import the bot logic from advisor_bot.py
+from advisor_bot import get_advice  # Make sure advisor_bot.py is in the same directory or adjust the import path
+
 # Page configuration
 st.set_page_config(
     page_title="Market Sentinel - Anomaly Detection",
@@ -121,6 +124,15 @@ if uploaded_file is not None:
             # Show anomalies
             st.write(f"Number of anomalies detected: {anomalies.sum()}")
             
+            # Chatbot interaction section
+            st.markdown("### 💬 Ask the Bot:")
+            user_input = st.chat_input("Ask me about anomalies, investment strategies, or the model.")
+            
+            if user_input:
+                # Get bot response using advisor_bot.py
+                response = get_advice(user_input)
+                st.chat_message("Bot", response)
+                
     except Exception as e:
         st.error(f"An error occurred: {e}")
 else:
