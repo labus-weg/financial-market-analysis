@@ -4,22 +4,30 @@ from model import load_data, train_model, evaluate_model, preprocess_data
 from strategy import generate_strategy
 from advisor_bot import get_advice
 import joblib
+import io
 
 # Streamlit app setup
 st.title("Market Anomaly Detection and Investment Strategy")
 
 # File upload section
-uploaded_file = st.sidebar.file_uploader("Upload Financial Data (CSV or Excel)", type=["csv", "xlsx"])
+uploaded_file = st.sidebar.file_uploader("Upload Financial Data (CSV, Excel, or other formats)", type=["csv", "xlsx", "xls", "json", "txt"])
 
 if uploaded_file:
     try:
-        # Check file extension
-        if uploaded_file.name.endswith(".csv"):
+        # Try reading the uploaded file using pandas
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+
+        # Read the file based on its extension
+        if file_extension == 'csv':
             data = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith(".xlsx"):
+        elif file_extension in ['xls', 'xlsx']:
             data = pd.read_excel(uploaded_file)
+        elif file_extension == 'json':
+            data = pd.read_json(uploaded_file)
+        elif file_extension == 'txt':
+            data = pd.read_csv(uploaded_file, sep='\t')  # Assuming tab-separated values
         else:
-            st.error("Unsupported file format. Please upload a CSV or Excel file.")
+            st.error(f"Unsupported file format: {file_extension}")
             st.stop()
 
         st.write("Data Preview:", data.head())
