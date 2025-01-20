@@ -31,40 +31,40 @@ if uploaded_file:
 
     st.write("Data Preview:", data.head())
 
-        # Preprocess the data
-        X, y, original_data = load_data(uploaded_file)
+    # Preprocess the data
+    X, y, original_data = load_data(uploaded_file)
 
-        # Preprocess data (imputation and scaling)
-        X_scaled, scaler, imputer = preprocess_data(X)
+    # Preprocess data (imputation and scaling)
+    X_scaled, scaler, imputer = preprocess_data(X)
 
-        # Load trained model (or train if needed)
-        try:
-            model = joblib.load('xgb_model.pkl')  # Load pre-trained model if exists
-            st.sidebar.text("Loaded pre-trained model")
-        except FileNotFoundError:
-            model = train_model(X_scaled, y)  # Train model if not found
-            joblib.dump(model, 'xgb_model.pkl')
-            st.sidebar.text("Trained new model")
+    # Load trained model (or train if needed)
+    try:
+        model = joblib.load('xgb_model.pkl')  # Load pre-trained model if exists
+        st.sidebar.text("Loaded pre-trained model")
+    except FileNotFoundError:
+        model = train_model(X_scaled, y)  # Train model if not found
+        joblib.dump(model, 'xgb_model.pkl')
+        st.sidebar.text("Trained new model")
 
-        # Model evaluation
-        st.sidebar.text("Evaluating Model...")
-        report = evaluate_model(model, X_scaled, y)
-        st.text("Model Evaluation:\n" + report)
+    # Model evaluation
+    st.sidebar.text("Evaluating Model...")
+    report = evaluate_model(model, X_scaled, y)
+    st.text("Model Evaluation:\n" + report)
 
-        # Make prediction (for demo, predicting on the first row)
-        prediction = model.predict([X.iloc[0]])[0]
+    # Make prediction (for demo, predicting on the first row)
+    prediction = model.predict([X.iloc[0]])[0]
 
-        # Generate strategy
-        strategy = generate_strategy(prediction)
-        st.write(f"**Predicted Market Condition:** {'Crash' if prediction == 1 else 'Stable'}")
-        st.write(f"**Suggested Strategy:** {strategy}")
+    # Generate strategy
+    strategy = generate_strategy(prediction)
+    st.write(f"**Predicted Market Condition:** {'Crash' if prediction == 1 else 'Stable'}")
+    st.write(f"**Suggested Strategy:** {strategy}")
 
-        # AI Bot response (for investment strategy)
-        input_data = original_data.iloc[0].to_dict()
-        advice = get_advice(prediction, input_data)
-        st.write(f"**AI Bot Advice:** {advice}")
+    # AI Bot response (for investment strategy)
+    input_data = original_data.iloc[0].to_dict()
+    advice = get_advice(prediction, input_data)
+    st.write(f"**AI Bot Advice:** {advice}")
 
-    except Exception as e:
-        st.error(f"Error loading the file: {e}")
+except Exception as e:
+    st.error(f"Error loading the file: {e}")
 else:
     st.info("Please upload a dataset to start the analysis.")
