@@ -153,7 +153,7 @@ If you'd like to contribute to this project, feel free to fork the repository, m
 ## 👨‍💻 Author
 
 - **Nafisa Nawrin Labonno**
-- GitHub: [labus-weg][(https://github.com/labus-weg/)]
+- GitHub: [labus-weg](https://github.com/labus-weg/)
 
 ---
 ## ©️ Credits
