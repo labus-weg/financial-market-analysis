@@ -1,12 +1,11 @@
 ## 🚀 Financial Market Anomaly Detection
 
-This project is an advanced market anomaly detection tool built to help investors, traders, and data scientists identify unusual behavior in financial markets. The tool uses machine learning algorithms to analyze historical market data, detect outliers, and provide actionable insights and investment strategies.
+This project is an intermediate market anomaly detection tool built to help investors, traders, and data scientists identify unusual behavior in financial markets. The tool uses basic/classical machine learning algorithms to analyze market data for any given dataset by detecting outliers, providing visualisation and AI support to gain insights.
 
 ---
 
 ## 🎯 Objective
-
-The goal of this project is to build a comprehensive anomaly detection system for financial market analysis that can:
+As introduced in the [Headstarter AI Accelerator Program](https://app.headstarter.co/), the goal of this project is to build a comprehensive anomaly detection system for financial market analysis that can:
 - Detect unusual market behaviors or "anomalies."
 - Visualize the detected anomalies on time series graphs.
 - Suggest investment strategies based on detected anomalies.
@@ -28,11 +27,12 @@ These models are used to detect anomalies in the financial data, such as price s
    - **Anomaly Score Plot**: Shows the anomaly scores assigned by the model, giving insights into how likely a data point is an anomaly.
 
 ### 3. **Investment Strategy Suggestions**
-   Based on the detected anomalies, the system suggests potential investment strategies (buy, sell, hold) to guide users' decisions.
+   Based on the detected anomalies, the system can be optimised to suggest potential investment strategies (buy, sell, hold) to guide users' decisions. Currently, this is not entirely attained but is being considered in its future iteration.
 
 ### 4. **AI Financial Advisor Chatbot**
    - Offers personalized financial advice based on user input.
    - Powered by OpenAI's GPT model.
+   - Needs further debugging to generate accurate responses.
 
 ---
 
@@ -46,7 +46,7 @@ You can upload your market data in CSV or Excel formats. The tool supports a var
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/your-username/financial-market-anomaly-detection.git](https://github.com/labus-weg/financial-market-analysis.git)
+   git clone [https://github.com/labus-weg/financial-market-anomaly-detection.git](https://github.com/labus-weg/financial-market-analysis.git)
    cd market-anomaly-detection
    ```
 
@@ -156,6 +156,8 @@ If you'd like to contribute to this project, feel free to fork the repository, m
 - GitHub: [labus-weg]([https://github.com/your-username](https://github.com/labus-weg/)
 
 ---
+## ©️ Credits
+Special thanks to Angelica Iacovelli for introducing the challenge and to Faizan Ahmed & Yasin Ehsan at Headstarter AI (Accelerator Program) for their continuous support.
 
 ## 💬 Feedback & Support
 
