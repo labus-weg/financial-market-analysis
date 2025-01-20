@@ -1,7 +1,4 @@
-Sure! Here's a well-structured and descriptive `README.md` for your financial market anomaly detection project:
-
-```markdown
-# 🚀 Financial Market Anomaly Detection
+## 🚀 Financial Market Anomaly Detection
 
 This project is an advanced market anomaly detection tool built to help investors, traders, and data scientists identify unusual behavior in financial markets. The tool uses machine learning algorithms to analyze historical market data, detect outliers, and provide actionable insights and investment strategies.
 
@@ -49,8 +46,8 @@ You can upload your market data in CSV or Excel formats. The tool supports a var
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/financial-market-anomaly-detection.git
-   cd financial-market-anomaly-detection
+   git clone [https://github.com/your-username/financial-market-anomaly-detection.git](https://github.com/labus-weg/financial-market-analysis.git)
+   cd market-anomaly-detection
    ```
 
 2. **Install the required dependencies:**
