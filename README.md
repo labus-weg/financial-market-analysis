@@ -1,6 +1,6 @@
 ## 🚀 Financial Market Anomaly Detection
 
-This project is an intermediate market anomaly detection tool built to help investors, traders, and data scientists identify unusual behavior in financial markets. The tool uses basic/classical machine learning algorithms to analyze market data for any given dataset by detecting outliers, providing visualisation and AI support to gain insights.
+This project is a simple market anomaly detection tool built to help investors, traders, and data scientists identify unusual behavior in financial markets. The tool uses basic/classical machine learning algorithms to analyze market data for any given dataset by detecting outliers, providing visualisation and AI support to gain insights.
 
 ---
 
