@@ -4,7 +4,8 @@ from model import load_data, train_model, evaluate_model, preprocess_data
 from strategy import generate_strategy
 from advisor_bot import get_advice
 import joblib
-import io
+import openai
+import os
 
 # Streamlit app setup
 st.title("Market Anomaly Detection and Investment Strategy")
@@ -13,24 +14,22 @@ st.title("Market Anomaly Detection and Investment Strategy")
 uploaded_file = st.sidebar.file_uploader("Upload Financial Data (CSV, Excel, or other formats)", type=["csv", "xlsx", "xls", "json", "txt"])
 
 if uploaded_file:
-    try:
-        # Try reading the uploaded file using pandas
-        file_extension = uploaded_file.name.split('.')[-1].lower()
+    # Handle file reading dynamically based on type
+    file_extension = uploaded_file.name.split('.')[-1].lower()
+    
+    if file_extension == 'csv':
+        data = pd.read_csv(uploaded_file, encoding='latin1')
+    elif file_extension in ['xls', 'xlsx']:
+        data = pd.read_excel(uploaded_file)
+    elif file_extension == 'json':
+        data = pd.read_json(uploaded_file)
+    elif file_extension == 'txt':
+        data = pd.read_csv(uploaded_file, sep='\t', encoding='latin1')  # For tab-separated values
+    else:
+        st.error(f"Unsupported file format: {file_extension}")
+        st.stop()
 
-        # Read the file based on its extension
-        if file_extension == 'csv':
-            data = pd.read_csv(uploaded_file)
-        elif file_extension in ['xls', 'xlsx']:
-            data = pd.read_excel(uploaded_file)
-        elif file_extension == 'json':
-            data = pd.read_json(uploaded_file)
-        elif file_extension == 'txt':
-            data = pd.read_csv(uploaded_file, sep='\t')  # Assuming tab-separated values
-        else:
-            st.error(f"Unsupported file format: {file_extension}")
-            st.stop()
-
-        st.write("Data Preview:", data.head())
+    st.write("Data Preview:", data.head())
 
         # Preprocess the data
         X, y, original_data = load_data(uploaded_file)
@@ -38,9 +37,14 @@ if uploaded_file:
         # Preprocess data (imputation and scaling)
         X_scaled, scaler, imputer = preprocess_data(X)
 
-        # Train the model
-        st.sidebar.text("Training Model...")
-        model = train_model(X_scaled, y)
+        # Load trained model (or train if needed)
+        try:
+            model = joblib.load('xgb_model.pkl')  # Load pre-trained model if exists
+            st.sidebar.text("Loaded pre-trained model")
+        except FileNotFoundError:
+            model = train_model(X_scaled, y)  # Train model if not found
+            joblib.dump(model, 'xgb_model.pkl')
+            st.sidebar.text("Trained new model")
 
         # Model evaluation
         st.sidebar.text("Evaluating Model...")
