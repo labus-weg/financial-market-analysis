@@ -46,7 +46,7 @@ You can upload your market data in CSV or Excel formats. The tool supports a var
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/labus-weg/financial-market-anomaly-detection.git
+   git clone https://github.com/labus-weg/financial-market-analysis
    cd market-anomaly-detection
    ```
 
