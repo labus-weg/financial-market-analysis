@@ -233,3 +233,25 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("<div style='text-align: center'><p>Market Anomaly Detection - Powered by Streamlit</p><p style='color: #666;'>Built with ❤️</p></div>", unsafe_allow_html=True)
+from model import MarketAnomalyDetector, load_data
+
+# Sidebar: Model selection
+with st.sidebar:
+    model_name = st.selectbox("Select Model", ["IsolationForest", "OneClassSVM", "LOF"])
+    contamination = st.slider("Anomaly Sensitivity", min_value=0.01, max_value=0.2, value=0.1)
+
+# Load data and initialize the detector with the selected model
+if uploaded_file is not None:
+    data = load_data(uploaded_file)
+    anomaly_detector = MarketAnomalyDetector(contamination=contamination, model_type=model_name)
+    
+    # Fit the model
+    anomaly_detector.fit(data)
+
+    # Predict anomalies and get anomaly scores
+    anomalies = anomaly_detector.predict(data)
+    anomaly_scores = anomaly_detector.anomaly_scores(data)
+
+    # Visualize anomalies and scores
+    st.plotly_chart(plot_anomaly_timeline(data, anomalies), use_container_width=True)
+    st.plotly_chart(plot_decision_function(data, anomaly_scores), use_container_width=True)
