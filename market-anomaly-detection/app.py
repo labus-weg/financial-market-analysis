@@ -282,19 +282,19 @@ def load_data(uploaded_file):
     st.plotly_chart(plot_decision_function(data, anomaly_scores), use_container_width=True)
 
 
-# Chatbot Section
-st.title("🤖 AI Financial Advisor")
+# # Chatbot Section
+# st.title("🤖 AI Financial Advisor")
 
-# Text input for user to chat with the bot
-user_input = st.text_input("Ask your financial advisor:", "")
+# # Text input for user to chat with the bot
+# user_input = st.text_input("Ask your financial advisor:", "")
 
-if user_input:
-    # Get advice from the chatbot
-    try:
-        bot_response = get_advice(user_input)
-        st.write(f"**Advisor's Response:** {bot_response}")
-    except Exception as e:
-        st.error(f"An error occurred while fetching advice: {e}")
-else:
-    st.write("Ask me anything related to market analysis and anomaly detection!")
+# if user_input:
+#     # Get advice from the chatbot
+#     try:
+#         bot_response = get_advice(user_input)
+#         st.write(f"**Advisor's Response:** {bot_response}")
+#     except Exception as e:
+#         st.error(f"An error occurred while fetching advice: {e}")
+# else:
+#     st.write("Ask me anything related to market analysis and anomaly detection!")
 
